@@ -1,0 +1,58 @@
+
+#--------------------------------- quick harmonized ---------------------------
+
+# trait=SAR
+trait=OP
+gwas=./fastGWA_result/${trait}.fastGWA
+snp=SNP
+a2=A2
+a1=A1
+b=BETA
+p=P
+
+
+python ./software/M03_betas.py \
+--snp_map_file ./data/sample_data/coordinate_map/map_snp150_hg38.txt.gz \
+--gwas_file ${gwas} \
+--snp_column ${snp} \
+--non_effect_allele_column ${a2} \
+--effect_allele_column ${a1} \
+--beta_column ${b} \
+--pvalue_column ${p} \
+--keep_non_rsid \
+--throw \
+--output ./data/harmonized/${trait}.txt.gz
+
+
+#--------------------------------- twas ---------------------------
+
+# trait=SAR
+trait=OP
+
+cat ./tissue.txt | while read tissue;
+do
+echo ${tissue}_txt
+
+python ./software/SPrediXcan.py \
+--gwas_file ./data/harmonized/${trait}.txt.gz \
+--snp_column snp \
+--effect_allele_column effect_allele \
+--non_effect_allele_column non_effect_allele \
+--zscore_column zscore \
+--model_db_path ./data/sample_data/models/eqtl/mashr/mashr_${tissue}.db \
+--covariance ./data/sample_data/models/eqtl/mashr/mashr_${tissue}.txt.gz \
+--keep_non_rsid \
+--additional_output \
+--model_db_snp_key varID \
+--throw \
+--output_file ./result/${trait}_${tissue}.csv
+
+done
+
+
+
+
+
+
+
+

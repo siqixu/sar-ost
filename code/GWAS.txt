@@ -1,0 +1,73 @@
+#----------------------- QC  ------------------------
+
+for chr in {1..22} 
+do
+
+plink2 --bfile ./bed/${chr}_v0 --keep ${keep_ind} --make-bed --out ./QC/${chr} 
+plink2 --bfile ./QC/${chr} --missing --out ./QC/${chr} 
+plink2 --bfile ./QC/${chr} --geno 0.05 --make-bed --out ./QC/${chr}
+plink2 --bfile ./QC/${chr} --freq --out ./QC/${chr}_MAF
+plink2 --bfile ./QC/${chr} --maf 0.001 --make-bed --out ./QC/${chr}
+plink2 --bfile ./QC/${chr} --hardy
+plink2 --bfile ./QC/${chr} --hwe 1e-6 --make-bed --out ./QC/${chr}
+plink2 --bfile ./QC/${chr} --extract ${info_pass} --make-bed --out ./QC/${chr}
+
+done
+
+
+#----------------------- hapmap ------------------------
+hapmap=./hapmap3_r1_b36_fwd.CEU.qc.poly.recode
+
+plink \
+--file ${hapmap} \
+--maf 0.01 \
+--indep-pairwise 1000 100 0.9 \
+--out ./hapmap
+
+hapmap_snp=/hapmap/hapmap.prune.in
+
+
+#----------------------------- gcta  --------------------------
+
+geno_chrs=./geno_chrs_auto.txt
+
+
+for i in {1..250}
+do
+  gcta64 --mbfile ${geno_chrs} --extract ${hapmap_snp} \
+  --make-grm-part 250 $i --sparse-cutoff 0.05 --thread-num 32 \
+  --out ./sp_grm/sp_grm
+done  
+
+cat ./sp_grm/sp_grm.part_250_*grm.id > ./sp_grm/grm.grm.id
+cat ./sp_grm/sp_grm.part_250_*grm.sp > ./sp_grm/grm.grm.sp
+
+
+covar=./covar.txt
+qcovar=./qcovar.txt
+sp_grm=./sp_grm/grm
+# phen=SAR
+phen=OP
+
+
+gcta64 --mbfile ${geno_chrs} \
+--grm-sparse ${sp_grm} \
+--fastGWA-mlm-binary \
+--covar ${covar} --qcovar ${qcovar} \
+--pheno ./${phen}.txt \
+--nofilter \
+--thread-num 32 \
+--out ./fastGWA_result/${phen}
+
+
+
+
+
+
+
+
+
+
+
+  
+  

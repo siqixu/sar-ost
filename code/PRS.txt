@@ -1,0 +1,15 @@
+# phen=SAR
+phen=OP
+
+gwas_result=./fastGWA_result/${phen}/gwas_clump.txt
+
+for chr in {1..22}
+do
+
+plink2 \
+--bfile /ukb/${chr} \
+--score ${gwas_result} 15 4 11 header list-variants cols=+scoresums \
+--extract ./fastGWA_result/${phen}/clump_snp.txt \
+--out ./prs/${phen}/chr${chr}
+
+done
